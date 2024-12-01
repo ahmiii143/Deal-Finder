@@ -3,8 +3,8 @@ const resturantSchema = new mongoose.Schema(
   {
     name: { type: String, required: true },
     location: {
-      address: { type: String }, // Direct address as a fallback
-      googleMapsLink: { type: String }, // Google Maps link if available
+      address: { type: String },
+      googleMapsLink: { type: String },
     },
     contact: {
       phone: { type: String },

@@ -1,68 +1,31 @@
 import express from "express";
 import cors from "cors";
-import puppeteer from "puppeteer"; // Import Puppeteer
+import connectToDatabase from "./utils/dbConnection.js";
+import userRoutes from "./routes/user.routes.js";
+import dealRoutes from "./routes/deal.routes.js";
+import commentRoutes from "./routes/deal.routes.js";
+import menuRoutes from "./routes/menu.routes.js";
+import restaurantRoutes from "./routes/resturant.routes.js";
+import uploadRoutes from "./routes/upload.routes.js";
 
 const app = express();
-const PORT = 1010;
-
-// Use CORS middleware
 app.use(cors());
+app.use(express.json());
 
-app.get("/", (req, res) => {
-  res.send("hello");
-});
+// Connect to MongoDB
+connectToDatabase();
 
-// Define an asynchronous function for scraping
-// Define an asynchronous function for scraping
-// Define an asynchronous function for scraping
-async function scrapeData() {
-  // Launch Puppeteer with debugging options and set default geolocation
-  const browser = await puppeteer.launch({ headless: false, slowMo: 50 });
-  const page = await browser.newPage();
+// Serve static files (for uploaded images)
+app.use("/uploads", express.static("uploads"));
 
-  // Set a default location (latitude, longitude) if required
-  await page.setGeolocation({ latitude: 37.7749, longitude: -122.4194 }); // Example: San Francisco coordinates
+// API Routes
+app.use("/api/users", userRoutes);
+app.use("/api/deals", dealRoutes);
+app.use("/api/comments", commentRoutes);
+app.use("/api/menus", menuRoutes);
+app.use("/api/restaurants", restaurantRoutes);
+app.use("/api/uploads", uploadRoutes);
 
-  // Allow location permissions for the page
-  const context = browser.defaultBrowserContext();
-  await context.overridePermissions("https://howdy.pk/", ["geolocation"]);
+const PORT = process.env.PORT || 5000;
 
-  // Navigate to the target website
-  console.log("Navigating to https://howdy.pk/");
-  await page.goto("https://howdy.pk/", {
-    waitUntil: "networkidle2",
-    timeout: 30000,
-  }); // 30 seconds timeout
-
-  // Wait for the body tag to load
-  console.log("Waiting for the body tag...");
-  await page.waitForSelector("body");
-
-  // Extract HTML content from the body tag
-  const data = await page.evaluate(() => {
-    const bodyContent = document.querySelector("body");
-    return bodyContent ? bodyContent.innerHTML : "No content found in body";
-  });
-
-  // Close the browser
-  console.log("Closing the browser...");
-  await browser.close();
-
-  return { bodyHTML: data }; // Return the body content
-}
-
-// Define the API route for scraping
-app.get("/api/scrape", async (req, res) => {
-  try {
-    const data = await scrapeData(); // Call the scraping function
-    res.json(data); // Send the extracted data as a response
-  } catch (error) {
-    console.error("Error fetching data:", error);
-    res.status(500).send("Error fetching data");
-  }
-});
-
-// Start the server
-app.listen(PORT, () => {
-  console.log(`App is listening on port ${PORT}`);
-});
+app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
